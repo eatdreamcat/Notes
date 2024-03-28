@@ -314,13 +314,17 @@ for(int i = 0; i < bufferWidth; ++i)
         // 构造射线
         Ray ray = Ray(
             CameraPosition, 
-            VolexCoordToRayDir(voxelCoordCenter, near, fov, aspectRatio));
+            VoxelCoordToRayDir(voxelCoordCenter, near, fov, aspectRatio));
         // 填充高度雾
         FillHeightFogBuffer(voxelCoord, ray);
     }
 }
 ```
 
+
+$$
+Ray.CurrentPosition = Ray.OriginPosition + t * Ray.Direction
+$$
 
 
 ##### 高度雾计算
@@ -394,9 +398,13 @@ SliceDataPrepare()
         var stopSlice = DistanceToSlice(tEnd);
         var sliceCount = stopSlice - startSlice;
 
+        var bounds = CalculateViewBounds(volume);
+        
         // fill parameters
         IndexCountPerQuad = 6;
-        QuadInstanceCount = sliceCount;
+        QuadInstanceCount[volumeIndex] = sliceCount;
+        QuadInstanceStartSlice[volumeIndex] = startSlice;
+        QuadInstanceBounds[volumeIndex] = bounds;
     }
 }
 ```
@@ -1230,6 +1238,16 @@ float4 GetQuadVertexPosition(uint vertexID, float z = UNITY_NEAR_CLIP_VALUE)
 
 
 
+如果屏幕中可见的Volume有两个，如下图
+
+![image-20240328112213460](https://raw.githubusercontent.com/eatdreamcat/PicGo-01/main/image-20240328112213460.png)
+
+则需要调用两次cmd.DrawProceduralIndirect
+
+![image-20240328112148945](https://raw.githubusercontent.com/eatdreamcat/PicGo-01/main/image-20240328112148945.png)
+
+
+
 下一步开始进行着色
 
 
@@ -2041,7 +2059,7 @@ Runtime/Lighting/VolumetricLighting/VolumetricLightingFiltering.compute
 
 <img src="https://raw.githubusercontent.com/eatdreamcat/PicGo-01/main/image-20240321112506640.png" alt="image-20240321112506640" style="zoom:150%;" />
 
-
+![image-20240328104746576](https://raw.githubusercontent.com/eatdreamcat/PicGo-01/main/image-20240328104746576.png)
 
 
 
@@ -2191,6 +2209,12 @@ WriteOutput(voxelCoord, value / sumW);
 
 
 
+
+##### OpaqueAtmosphericScattering
+
+
+
+<img src="https://raw.githubusercontent.com/eatdreamcat/PicGo-01/main/image-20240328111607011.png" alt="image-20240328111607011" style="zoom:150%;" />
 
 
 
