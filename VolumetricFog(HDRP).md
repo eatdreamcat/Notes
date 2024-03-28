@@ -16,8 +16,6 @@
 
 ![image-20240320110218564](https://raw.githubusercontent.com/eatdreamcat/PicGo-01/main/image-20240320110218564.png)
 
-![](C:\Users\吃吃\Desktop\Notes\VolumnFog(HDRP)\体积雾效果对比.gif)
-
 我们在这里先考虑某一个着色点
 
 <img src="https://raw.githubusercontent.com/eatdreamcat/PicGo-01/main/image-20240320110513558.png" alt="image-20240320110513558" style="zoom:50%;" />
@@ -786,11 +784,11 @@ JitteredRay ray;
 ray.originWS    = GetCurrentViewPosition();
 ray.centerDirWS = rayDirWS * rcpLenRayDir; // Normalize
 
-// 把相机forward投影到射线方向，得到forward向量在RayDir上的长度
+//计算出 forward跟rayDir的cos值
 float FdotD = dot(F, ray.centerDirWS);
 /**
  * _VBufferUnitDepthTexelSpacing : 远平面每个纹素占据多大单位
- * FdotD * rcpLenRayDir : 相当于forward在RayDir上的长度与RayDir长度本身的比值
+ * FdotD * rcpLenRayDir : 
  * 因为单位格子下，越靠近屏幕中心，格子对应的立体角越大。
  **/
 float unitDistFaceSize = _VBufferUnitDepthTexelSpacing * FdotD * rcpLenRayDir;
@@ -851,14 +849,6 @@ for (uint slice = 0; slice < _VBufferSliceCount; slice++)
 深度按Log分布比例是0.5，图像如下
 
 ![image-20240315111949702](https://raw.githubusercontent.com/eatdreamcat/PicGo-01/main/image-20240315111949702.png)
-
-
-
-##### Generate Max Z Mask for Volumetric(TODO)
-
-
-
-
 
 
 
@@ -1294,7 +1284,6 @@ void Frag(VertexToFragment v2f, out float4 outColor : SV_Target0)
     if (!overlap)
         clip(-1);
 
-    // TODO：下面两个方法的实现暂时找不到
     FragInputs fragInputs = BuildFragInputs(v2f, voxelCenterBS, voxelCenterCS);
     // 采样Mask贴图
     GetVolumeData(fragInputs, v2f.viewDirectionWS, albedo, extinction);
@@ -1325,7 +1314,7 @@ void Frag(VertexToFragment v2f, out float4 outColor : SV_Target0)
 
 
 
-```
+```c
 void GetVolumeData(FragInputs fragInputs, float3 V, out float3 scatteringColor, out float density)
 {
     SurfaceDescriptionInputs surfaceDescriptionInputs = FragInputsToSurfaceDescriptionInputs(fragInputs, V);
@@ -2214,6 +2203,8 @@ WriteOutput(voxelCoord, value / sumW);
 
 
 
+最终体积光计算结果存在LightingBuffer里，实际绘制到CameraTarget是在大气散射这个Pass进行叠加的，如下图所示
+
 <img src="https://raw.githubusercontent.com/eatdreamcat/PicGo-01/main/image-20240328111607011.png" alt="image-20240328111607011" style="zoom:150%;" />
 
 
@@ -2264,29 +2255,11 @@ WriteOutput(voxelCoord, value / sumW);
 
 4. 实际着色是，代码中使用的公式只有变量部分，为什么？ 因为最近结果计算时会把常数部分也一起算进去
 
-5. 重投影会有严重闪烁问题。
+5. 重投影可能会有严重闪烁问题。
 
    ![img]()
 
    
 
    
-
-   
-
-
-
-
-
-## 草稿区
-
-
-
-```
-decodingParams.x * exp2(d * decodingParams.y) + decodingParams.z
-```
-
-$$
-Depth_{decoded} = \frac{1}{c}*2^{Depth_{encoded} * Log_{2}(c*(f-n) + 1)} + n - \frac{1}{c}
-$$
 
