@@ -1348,20 +1348,6 @@ FragInputs BuildFragInputs(VertexToFragment v2f, float3 voxelPositionOS, float3 
 
 
 
-
-
-**MaterialMask**（TODO）
-
-
-
-
-
-
-
-
-
-
-
 ##### Volumetric Lighting
 
 <img src="https://raw.githubusercontent.com/eatdreamcat/PicGo-01/main/动画.gif" style="zoom: 50%;" />
@@ -2206,60 +2192,3 @@ WriteOutput(voxelCoord, value / sumW);
 最终体积光计算结果存在LightingBuffer里，实际绘制到CameraTarget是在大气散射这个Pass进行叠加的，如下图所示
 
 <img src="https://raw.githubusercontent.com/eatdreamcat/PicGo-01/main/image-20240328111607011.png" alt="image-20240328111607011" style="zoom:150%;" />
-
-
-
-## 离线工具相关（TODO）
-
-
-
-### 噪声
-
-
-
-#### Perlin
-
-
-
-####  Worley
-
-
-
-### 生成工具开发
-
-
-
-
-
-
-
-## 分析（TODO）
-
-
-
-
-
-1. 性能分析
-
-2. 优缺点分析以及如何落地项目
-
-
-
-## 问题汇总
-
-1. 为什么用投影矩阵的宽高比而不是直接用相机的宽高比？
-
-2. 第一个Pass的变换矩阵推导？
-
-3. 体素化时，“Sphere-capped”如何理解？
-
-4. 实际着色是，代码中使用的公式只有变量部分，为什么？ 因为最近结果计算时会把常数部分也一起算进去
-
-5. 重投影可能会有严重闪烁问题。
-
-   ![img]()
-
-   
-
-   
-
