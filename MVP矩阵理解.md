@@ -144,7 +144,7 @@ $$
 
  = (x·m00+y·m01+z·m02, 
  x·m10+y·m11+z·m12,   
- x·m20+y·m21+z·m22)
+ x·m20+y·m21+z·m22)
 $$
 可以看到，得到新的向量，xyz分量分别为原向量与矩阵每一行向量的点乘结果，而点乘的意义正好就是投影。
 
@@ -180,6 +180,12 @@ $$
 
 ![image-20240330224640935](https://raw.githubusercontent.com/eatdreamcat/PicGo-01/main/image-20240330224640935.png)
 
+
+
+
+
+
+
 ### 缩放
 
 
@@ -198,9 +204,94 @@ $$
 
 
 
+**关于为什么是先旋转缩放再平移？**
+
+
+
+我们可以把M矩阵拆分为3x3部分和齐次的部分。对于tx，ty，tz，前面我们说过可以认为表示模型坐标系原点的位置，它是一个世界空间系下的量。而3x3部分则是正交基。
+
+假设我们把顶点当作是模型空间系下的向量，将模型空间系下的向量左乘正交基矩阵，则表示把向量转到了世界空间，把（tx，ty，tz）也当作一组向量，进行相加，则正好得到世界空间下由原点指向顶点的向量。
+
+![image-20240331214822676](https://raw.githubusercontent.com/eatdreamcat/PicGo-01/main/image-20240331214822676.png)
+
+如上图所示，p为模型顶点，蓝色的向量代表齐次矩阵的xyz位移量的向量表示，而黄色矩阵则是由模型中心指向顶点p的向量。
+
+对于蓝色向量，是一个世界坐标系下的向量，对于黄色向量则是模型坐标系下。
+
+倘若先进行位移，即黄色向量与蓝色向量相加，两个在不同坐标系下的向量相加是没有意义的。
+
+因此需要先将黄色向量乘3x3正交基转换到世界坐标系，然后再于蓝色向量相加。
+
+即可以得到顶点p在世界空间中的位置。
+
+
+
 ## View矩阵
 
+V矩阵可以理解为相机M矩阵的逆，而前面3x3部分则是正交基部分，下面的**right，up，forward**均为相机**transform**的。
 
+对于正交基，转置就是逆。因此，对于M矩阵正交基，原本是
+$$
+\begin{bmatrix}
+&right.x &up.x &forward.x\\
+&right.y &up.y &forward.y\\
+&right.z &up.z &forward.z\\
+\end{bmatrix}
+$$
+而因为相机空间是朝向-z进行观察，z轴需要反向（右手坐标系）。得矩阵应该为
+$$
+\begin{bmatrix}
+&right.x &up.x &-forward.x\\
+&right.y &up.y &-forward.y\\
+&right.z &up.z &-forward.z\\
+\end{bmatrix}
+$$
+转置后作为V矩阵的正交基为
+$$
+\begin{bmatrix}
+&right.x &right.y &right.z\\
+&up.x &up.y &up.z\\
+&-forward.x &-forward.y &-forward.z\\
+\end{bmatrix}
+$$
+在HDRP中有这么一段shader
+
+```c
+// Returns the forward (central) direction of the current view in the world space.
+float3 GetViewForwardDir()
+{
+    float4x4 viewMat = GetWorldToViewMatrix();
+    // 实际上，这里就是做了个右手系到左手系的转化。
+    return -viewMat[2].xyz;
+}
+```
+
+在微软的文档中说到对于矩阵的访问
+
+![image-20240331225551767](https://raw.githubusercontent.com/eatdreamcat/PicGo-01/main/image-20240331225551767.png)
+
+因此GetViewForwardDir中，ViewMat[2]获取的实际上正好是-forward，再取反即可得到相机的forward。
+
+![image-20240331225802970](https://raw.githubusercontent.com/eatdreamcat/PicGo-01/main/image-20240331225802970.png)
+
+综上，相机View矩阵最终形态应该为
+$$
+\begin{bmatrix}
+&right.x &right.y &right.z &-tx\\
+&up.x &up.y &up.z &-ty\\
+&-forward.x &-forward.y &-forward.z &-tz\\
+&0 &0 &0 &1
+\end{bmatrix}
+$$
+
+
+下面来进行验证。
+
+![image-20240331233035754](https://raw.githubusercontent.com/eatdreamcat/PicGo-01/main/image-20240331233035754.png)
+
+首先如上图，可以看到相机View矩阵的z轴跟transform的forward正好反向。在不旋转的情况下，tx，ty做了反向，而因为z轴在左右手坐标系中是反向的。
+
+TODO。。。。
 
 
 
@@ -213,6 +304,8 @@ $$
 ### 正交投影
 
 
+
+![image-20240403134415407](https://raw.githubusercontent.com/eatdreamcat/PicGo-01/main/image-20240403134415407.png)
 
 
 
