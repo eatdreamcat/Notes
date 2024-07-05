@@ -524,3 +524,9 @@ struct VertexInput {
 2.https://developer.arm.com/documentation/101863/latest/Using-Mali-Offline-Compiler/Performance-analysis/Shader-properties
 
 3.https://developer.arm.com/Processors/Mali-G720
+
+4.https://zhuanlan.zhihu.com/p/122467342
+
+6.https://developer.apple.com/videos/play/wwdc2016/606/
+
+7.https://blog.csdn.net/qq_36383623/article/details/107249625
