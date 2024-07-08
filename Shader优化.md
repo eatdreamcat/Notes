@@ -323,7 +323,7 @@ GPT说最好占比是能达到50%-70%。
 
 
 
-Load/Store表示non-texture内存的读取和存储单元，包括buffer的读取，图片的读取，原子操作。（在Midgrard系列GPU中这部分管线单元还实现了插值器）。
+Load/Store表示non-texturing内存的读取和存储单元，包括buffer的读取，图片的读取，原子操作。（在Midgrard系列GPU中这部分管线单元还实现了插值器）。
 
 单个cache line（64 byte）的数据可以在一个时钟周期内加载。如果所有线程束访问的数据都在同一个cache line，则数据可以在一个时钟周期内返回。
 
