@@ -315,7 +315,7 @@ GPT说最好占比是能达到50%-70%。
 
 * FMA（Fused multiply accumulate）：乘法累加器，是主要的算术运算单元，用于浮点的运算，每个时钟可以执行一个32位或者两个16位的运算，大多数shader在算术上的瓶颈主要由这个的单元决定。
 * CVT（Arithmetic conversion）：算术转换，例如数据类型的转换，整数加法。和FMA一样，一个时钟可以一个32位或者两个16位运算。
-* SFU（Special functions unit）：特殊功能单元，比如三角函数，反三角函数，指数函数，对数函数，平方根，倒数等。因为每个单元有宽度为4的发射路径，因此一个时钟周期可以同时发出4个指令，在一个16-wide的wrap中，需要4个时钟周期才能执行完。
+* SFU（Special functions unit）：特殊功能单元，比如反三角函数，指数函数，对数函数，平方根等。因为每个单元有宽度为4的发射路径，因此一个时钟周期可以同时发出4个指令，在一个16-wide的wrap中，需要4个时钟周期才能执行完。
 
 
 
@@ -729,11 +729,13 @@ float4 out = f.xyyz * g.wyxz + h.w; // this is one instruction!
 - 减少复杂函数的调用，比如```log``` ```exp``` ```asin``` ```sqrt```
 - 使用```exp2``` ```log2```替换```exp``` ```log```
 
-         ``````glsl
-         float a = exp(x);
-         =>
-         float a = exp2(x * 1.442695f);    
-         ``````
+     ```glsl
+     
+     float a = exp(x);
+     =>
+     float a = exp2(x * 1.442695f);    
+     
+     ```
 
 
 
@@ -753,7 +755,7 @@ float length = sqrt(dot(vec, vec));
 
 // 优化代码：使用 rsqrt 和 rcp 替代 sqrt
 float invLength = inversesqrt(dot(vec, vec));
-float length = 1.0 / invLength;
+float length = rcp(invLength);
 
 ``````
 
@@ -843,4 +845,40 @@ float value = sign(x);
 [Shader指令优化](https://www.youtube.com/watch?v=-59GiEzRsjA)
 
 [Shader在线编译工具](https://godbolt.org/)
+
+
+
+
+
+
+
+mali gpu中，early z  test是基于片元的还是基于图元的？
+
+
+
+ChatGPT
+
+在 Mali GPU 中，Early Z（早期深度测试）是基于图元（primitive）而不是片元（fragment）的。
+
+### 基于图元的 Early Z
+
+Early Z 基于图元意味着在片元着色器执行之前进行深度测试。这种方法允许 GPU 在处理片元着色器之前丢弃被遮挡的片元，从而减少不必要的片元着色器计算，提高渲染效率。
+
+### 工作原理
+
+1. **图元阶段**：在三角形（或其他图元）被栅格化为片元之前，GPU 会对整个图元的深度信息进行初步检查。
+2. **深度测试**：在片元进入片元着色器之前，基于深度缓冲区中的深度值进行早期深度测试。
+3. **片元丢弃**：如果一个图元的某些片元在深度测试中失败（即被其他图元遮挡），这些片元将被丢弃，不会进入片元着色器。
+
+### 优点
+
+- **减少片元着色器工作量**：通过提前丢弃被遮挡的片元，减少片元着色器的执行次数。
+- **提高渲染效率**：减少了不必要的片元处理，提高了整体渲染效率。
+
+### Mali GPU 的具体实现
+
+Mali GPU 采用了一些特定的优化策略来实现和提高 Early Z 的效率：
+
+1. **Tile-based Rendering**：Mali GPU 使用基于瓦片的延迟渲染技术，在小块区域内进行渲染，从而有效利用片内缓存，提高了 Early Z 的效果。
+2. **Hidden Surface Removal (HSR)**：利用深度和模板缓冲区进行隐藏面移除，在片元着色器执行之前尽可能多地剔除不可见的片元。
 
